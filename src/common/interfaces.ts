@@ -1,11 +1,6 @@
 import { Layer3DMetadata } from '@map-colonies/mc-model-types';
 import { ICreateJobBody, IJobResponse, OperationStatus } from '@map-colonies/mc-priority-queue';
 
-export interface IConfig {
-  get: <T>(setting: string) => T;
-  has: (setting: string) => boolean;
-}
-
 export interface OpenApiConfig {
   filePath: string;
   basePath: string;
@@ -37,22 +32,6 @@ export interface TaskParameters {
   modelId: string;
   lastIndexError: number;
 }
-
-export interface S3Config {
-  accessKeyId: string;
-  secretAccessKey: string;
-  endpointUrl: string;
-  bucket: string;
-  region: string;
-  sslEnabled: boolean;
-  forcePathStyle: boolean;
-}
-
-export interface NFSConfig {
-  pvPath: string;
-}
-
-export type ProviderConfig = S3Config | NFSConfig;
 
 export interface IngestionResponse {
   jobId: string;

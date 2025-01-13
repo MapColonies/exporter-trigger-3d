@@ -3,18 +3,19 @@ import { getOtelMixin } from '@map-colonies/telemetry';
 import { trace } from '@opentelemetry/api';
 import { DependencyContainer } from 'tsyringe/dist/typings/types';
 import { instanceCachingFactory } from 'tsyringe';
-import jsLogger, { LoggerOptions } from '@map-colonies/js-logger';
+import jsLogger from '@map-colonies/js-logger';
 import client from 'prom-client';
 import { JobManagerClient } from '@map-colonies/mc-priority-queue';
+import { commonNfsV1Type, commonS3FullV1Type } from '@map-colonies/schemas';
 import { SERVICES, SERVICE_NAME } from './common/constants';
-import { Provider, ProviderConfig } from './common/interfaces';
+import { Provider } from './common/interfaces';
 import { tracing } from './common/tracing';
 import { ingestionRouterFactory, INGESTION_ROUTER_SYMBOL } from './ingestion/routes/ingestionRouter';
 import { InjectionObject, registerDependencies } from './common/dependencyRegistration';
 import { jobStatusRouterFactory, JOB_STATUS_ROUTER_SYMBOL } from './jobStatus/routes/jobStatusRouter';
 import { QueueFileHandler } from './handlers/queueFileHandler';
-import { getProvider, getProviderConfig } from './providers/getProvider';
-import { IConfig } from './common/interfaces';
+import { getProvider } from './providers/getProvider';
+import { getConfig } from './common/config';
 
 export interface RegisterOptions {
   override?: InjectionObject<unknown>[];
@@ -22,16 +23,18 @@ export interface RegisterOptions {
 }
 
 export const registerExternalValues = (options?: RegisterOptions): DependencyContainer => {
-  const jobManagerBaseUrl = config.get<string>('jobManager.url');
-  const provider = config.get<string>('ingestion.provider');
-  const loggerConfig = config.get<LoggerOptions>('telemetry.logger');
+  const configInstance = getConfig();
+
+  const jobManagerBaseUrl = configInstance.get('jobManager.url');
+  const provider = configInstance.get('storage.provider');
+  const loggerConfig = configInstance.get('telemetry.logger');
   const logger = jsLogger({ ...loggerConfig, prettyPrint: loggerConfig.prettyPrint, mixin: getOtelMixin() });
 
   tracing.start();
   const tracer = trace.getTracer(SERVICE_NAME);
 
   const dependencies: InjectionObject<unknown>[] = [
-    { token: SERVICES.CONFIG, provider: { useValue: config } },
+    { token: SERVICES.CONFIG, provider: { useValue: configInstance } },
     { token: SERVICES.LOGGER, provider: { useValue: logger } },
     { token: SERVICES.TRACER, provider: { useValue: tracer } },
     {
@@ -47,9 +50,7 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
     {
       token: SERVICES.METRICS_REGISTRY,
       provider: {
-        useFactory: instanceCachingFactory((container) => {
-          const config = container.resolve<IConfig>(SERVICES.CONFIG);
-
+        useFactory: instanceCachingFactory(() => {
           if (config.get<boolean>('telemetry.metrics.enabled')) {
             client.register.setDefaultLabels({
               app: SERVICE_NAME,
@@ -62,8 +63,8 @@ export const registerExternalValues = (options?: RegisterOptions): DependencyCon
     {
       token: SERVICES.PROVIDER_CONFIG,
       provider: {
-        useFactory: (): ProviderConfig => {
-          return getProviderConfig(provider);
+        useFactory: (): commonS3FullV1Type | commonNfsV1Type => {
+          return configInstance.get('storage.config');
         },
       },
     },

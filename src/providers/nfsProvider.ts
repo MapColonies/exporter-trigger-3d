@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import { Logger } from '@map-colonies/js-logger';
+import { type commonNfsV1Type } from '@map-colonies/schemas';
 import httpStatus from 'http-status-codes';
 import { inject, injectable } from 'tsyringe';
 import { Tracer } from '@opentelemetry/api';
@@ -7,7 +8,7 @@ import { withSpanAsyncV4 } from '@map-colonies/telemetry';
 import { QueueFileHandler } from '../handlers/queueFileHandler';
 import { AppError } from '../common/appError';
 import { SERVICES } from '../common/constants';
-import { Provider, NFSConfig, LogContext } from '../common/interfaces';
+import { Provider, LogContext } from '../common/interfaces';
 
 @injectable()
 export class NFSProvider implements Provider {
@@ -16,7 +17,7 @@ export class NFSProvider implements Provider {
   public constructor(
     @inject(SERVICES.LOGGER) protected readonly logger: Logger,
     @inject(SERVICES.TRACER) public readonly tracer: Tracer,
-    @inject(SERVICES.PROVIDER_CONFIG) protected readonly config: NFSConfig,
+    @inject(SERVICES.PROVIDER_CONFIG) protected readonly config: commonNfsV1Type,
     @inject(SERVICES.QUEUE_FILE_HANDLER) protected readonly queueFileHandler: QueueFileHandler
   ) {
     this.logContext = {

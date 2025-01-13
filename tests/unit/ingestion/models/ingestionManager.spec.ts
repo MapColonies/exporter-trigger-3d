@@ -22,10 +22,10 @@ let ingestionManager: IngestionManager;
 let payload: Payload;
 
 describe('ingestionManager', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     payload = createPayload('model');
 
-    getApp({
+    await getApp({
       override: [
         { token: SERVICES.QUEUE_FILE_HANDLER, provider: { useValue: queueFileHandlerMock } },
         { token: SERVICES.JOB_MANAGER_CLIENT, provider: { useValue: jobManagerClientMock } },

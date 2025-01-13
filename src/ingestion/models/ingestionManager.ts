@@ -5,9 +5,10 @@ import client from 'prom-client';
 import { withSpanAsyncV4, withSpanV4 } from '@map-colonies/telemetry';
 import { Tracer, trace } from '@opentelemetry/api';
 import { INFRA_CONVENTIONS, THREE_D_CONVENTIONS } from '@map-colonies/telemetry/conventions';
-import { JOB_TYPE, SERVICES } from '../../common/constants';
-import { CreateJobBody, IConfig, IngestionResponse, JobParameters, Provider, TaskParameters, Payload, LogContext } from '../../common/interfaces';
+import { SERVICES } from '../../common/constants';
+import { CreateJobBody, IngestionResponse, JobParameters, Provider, TaskParameters, Payload, LogContext } from '../../common/interfaces';
 import { QueueFileHandler } from '../../handlers/queueFileHandler';
+import { ConfigType } from '../../common/config';
 
 @injectable()
 export class IngestionManager {
@@ -23,7 +24,7 @@ export class IngestionManager {
   public constructor(
     @inject(SERVICES.LOGGER) private readonly logger: Logger,
     @inject(SERVICES.TRACER) public readonly tracer: Tracer,
-    @inject(SERVICES.CONFIG) private readonly config: IConfig,
+    @inject(SERVICES.CONFIG) private readonly config: ConfigType,
     @inject(SERVICES.JOB_MANAGER_CLIENT) private readonly jobManagerClient: JobManagerClient,
     @inject(SERVICES.PROVIDER) private readonly provider: Provider,
     @inject(SERVICES.QUEUE_FILE_HANDLER) protected readonly queueFileHandler: QueueFileHandler,
@@ -33,16 +34,16 @@ export class IngestionManager {
       this.jobsHistogram = new client.Histogram({
         name: 'jobs_duration_seconds',
         help: 'jobs duration time (seconds)',
-        buckets: config.get<number[]>('telemetry.metrics.buckets'),
+        buckets: config.get('telemetry.metrics.buckets'),
         labelNames: ['type'] as const,
         registers: [registry],
       });
     }
 
-    this.providerName = this.config.get<string>('ingestion.provider');
-    this.batchSize = config.get<number>('jobManager.task.batches');
-    this.taskType = config.get<string>('jobManager.task.type');
-    this.maxConcurrency = this.config.get<number>('maxConcurrency');
+    this.providerName = this.config.get('storage.provider');
+    this.batchSize = config.get('jobManager.extraConfigs.taskBatches');
+    this.taskType = config.get('jobManager.task.type');
+    this.maxConcurrency = this.config.get('maxConcurrency');
 
     this.logContext = {
       fileName: __filename,
@@ -55,7 +56,7 @@ export class IngestionManager {
     const job: CreateJobBody = {
       resourceId: payload.modelId,
       version: '1',
-      type: JOB_TYPE,
+      type: this.config.get('jobManager.job.type'),
       parameters: {
         metadata: payload.metadata,
         modelId: payload.modelId,
@@ -76,7 +77,7 @@ export class IngestionManager {
     const spanActive = trace.getActiveSpan();
     spanActive?.setAttributes({
       [INFRA_CONVENTIONS.infra.jobManagement.jobId]: jobResponse.id,
-      [INFRA_CONVENTIONS.infra.jobManagement.jobType]: JOB_TYPE,
+      [INFRA_CONVENTIONS.infra.jobManagement.jobType]: this.config.get('jobManager.job.type'),
       [THREE_D_CONVENTIONS.three_d.catalogManager.catalogId]: payload.modelId,
     });
 
@@ -102,7 +103,7 @@ export class IngestionManager {
     const spanActive = trace.getActiveSpan();
     spanActive?.setAttributes({
       [INFRA_CONVENTIONS.infra.jobManagement.jobId]: jobId,
-      [INFRA_CONVENTIONS.infra.jobManagement.jobType]: JOB_TYPE,
+      [INFRA_CONVENTIONS.infra.jobManagement.jobType]: this.config.get('jobManager.job.type'),
       [THREE_D_CONVENTIONS.three_d.catalogManager.catalogId]: payload.modelId,
     });
 
@@ -115,7 +116,7 @@ export class IngestionManager {
     await this.queueFileHandler.createQueueFile(payload.modelId);
 
     try {
-      const createJobTimerEnd = this.jobsHistogram?.startTimer({ type: JOB_TYPE });
+      const createJobTimerEnd = this.jobsHistogram?.startTimer({ type: this.config.get('jobManager.job.type') });
       const fileCount: number = await this.provider.streamModelPathsToQueueFile(
         payload.modelId,
         payload.pathToTileset,
@@ -221,7 +222,7 @@ export class IngestionManager {
   }
 
   private isFileInBlackList(data: string): boolean {
-    const blackList = this.config.get<string[]>('ingestion.blackList');
+    const blackList = this.config.get('blackList');
     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
     const fileExtension = data.split('.').slice(-1)[0];
     return blackList.includes(fileExtension);

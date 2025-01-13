@@ -20,7 +20,7 @@
     }
   },
   "server": {
-    "port": "8080",
+    "port": 8082,
     "request": {
       "payload": {
         "limit": "1mb"
@@ -33,30 +33,19 @@
       }
     }
   },
-  "S3": {
-    "accessKeyId": "minio",
-    "secretAccessKey": "minio",
-    "endpointUrl": "http://127.0.0.1:9000",
-    "bucket": "3dtiles-dest",
-    "region": "us-east-1",
-    "forcePathStyle": true,
-    "sslEnabled": false,
-    "maxAttempts": 3
-  },
-  "NFS": {
-    "pvPath": "/Path/To/Models"
-  },
-  "ingestion": {
+  "storage": {
     "provider": "NFS",
-    "blackList": ["tar", "zip", "rar", "7z"]
+    "config": {
+      "pvPath": "fda"
+    }
   },
+  "blackList": ["tar", "zip", "rar", "7z"],
   "jobManager": {
     "url": "http://127.0.0.1:8080",
     "job": {
       "type": "Ingestion_New_3D"
     },
     "task": {
-      "batches": 100,
       "type": "tilesCopying"
     }
   },

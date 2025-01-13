@@ -21,7 +21,7 @@ describe('S3Provider tests', () => {
   const s3Config = config.get<S3Config>('S3');
 
   beforeAll(async () => {
-    getApp({
+    await getApp({
       override: [
         { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
         { token: SERVICES.PROVIDER_CONFIG, provider: { useValue: s3Config } },

@@ -1,8 +1,15 @@
 {
+  "telemetry": {
+    "metrics": {
+      "enabled": false
+    }
+  },
   "S3": {
     "accessKeyId": "minioadmin",
     "secretAccessKey": "minioadmin",
-    "endpointUrl": "http://127.0.0.1:9000",
+    "host": "127.0.0.1",
+    "port": 9000,
+    "protocol": "http",
     "bucket": "test",
     "region": "us-east-1",
     "forcePathStyle": true,
@@ -12,10 +19,8 @@
   "NFS": {
     "pvPath": "./tests/helpers/3DModels"
   },
-  "ingestion": {
-    "provider": "S3",
-    "blackList": ["tar", "zip", "rar", "7z"]
-  },
+  "provider": "S3",
+  "blackList": ["tar", "zip", "rar", "7z"],
   "jobManager": {
     "url": "http://127.0.0.1:8080",
     "job": {

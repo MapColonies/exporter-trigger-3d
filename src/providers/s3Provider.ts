@@ -1,4 +1,5 @@
 import { CommonPrefix, ListObjectsCommand, ListObjectsRequest, S3Client, S3ClientConfig, S3ServiceException, _Object } from '@aws-sdk/client-s3';
+import { type commonS3FullV1Type } from '@map-colonies/schemas';
 import { Logger } from '@map-colonies/js-logger';
 import httpStatus from 'http-status-codes';
 import { inject, injectable } from 'tsyringe';
@@ -7,7 +8,7 @@ import { withSpanAsyncV4, withSpanV4 } from '@map-colonies/telemetry';
 import { QueueFileHandler } from '../handlers/queueFileHandler';
 import { AppError } from '../common/appError';
 import { SERVICES } from '../common/constants';
-import { LogContext, Provider, S3Config } from '../common/interfaces';
+import { LogContext, Provider } from '../common/interfaces';
 
 @injectable()
 export class S3Provider implements Provider {
@@ -18,11 +19,11 @@ export class S3Provider implements Provider {
   public constructor(
     @inject(SERVICES.LOGGER) protected readonly logger: Logger,
     @inject(SERVICES.TRACER) public readonly tracer: Tracer,
-    @inject(SERVICES.PROVIDER_CONFIG) protected readonly s3Config: S3Config,
+    @inject(SERVICES.PROVIDER_CONFIG) protected readonly s3Config: commonS3FullV1Type,
     @inject(SERVICES.QUEUE_FILE_HANDLER) protected readonly queueFileHandler: QueueFileHandler
   ) {
     const s3ClientConfig: S3ClientConfig = {
-      endpoint: this.s3Config.endpointUrl,
+      endpoint: `${this.s3Config.protocol}//${this.s3Config.host}:${this.s3Config.port}`,
       forcePathStyle: this.s3Config.forcePathStyle,
       credentials: {
         accessKeyId: this.s3Config.accessKeyId,

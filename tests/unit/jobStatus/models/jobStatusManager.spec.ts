@@ -12,8 +12,8 @@ import { jobManagerClientMock } from '../../../helpers/mockCreator';
 describe('jobStatusManager', () => {
   let jobStatusManager: JobStatusManager;
 
-  beforeAll(() => {
-    getApp({
+  beforeAll(async () => {
+    await getApp({
       override: [
         { token: SERVICES.JOB_MANAGER_CLIENT, provider: { useValue: jobManagerClientMock } },
         { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },

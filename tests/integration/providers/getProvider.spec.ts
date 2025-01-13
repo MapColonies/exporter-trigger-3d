@@ -25,7 +25,7 @@ describe('getProviderConfig tests', () => {
   it(`should throw an error when the provider can't be found on config`, () => {
     const provider = 'bla';
 
-    const response = () => getProviderConfig(provider);
+    const response = () => getProviderConfig(provider as "NFS");
 
     expect(response).toThrow(AppError);
   });

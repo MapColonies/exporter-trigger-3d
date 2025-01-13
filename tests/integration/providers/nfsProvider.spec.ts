@@ -22,9 +22,9 @@ describe('NFSProvider tests', () => {
   const nfsConfig = config.get<NFSConfig>('NFS');
   let nfsHelper: NFSHelper;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     register.clear();
-    getApp({
+    await getApp({
       override: [
         { token: SERVICES.PROVIDER_CONFIG, provider: { useValue: nfsConfig } },
         { token: SERVICES.LOGGER, provider: { useValue: jsLogger({ enabled: false }) } },
@@ -78,7 +78,7 @@ describe('NFSProvider tests', () => {
 
     it('if queue file handler does not work, throws error', async () => {
       register.clear();
-      getApp({
+      await getApp({
         override: [
           { token: SERVICES.PROVIDER_CONFIG, provider: { useValue: nfsConfig } },
           { token: SERVICES.QUEUE_FILE_HANDLER, provider: { useValue: queueFileHandlerMock } },
